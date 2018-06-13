@@ -1,37 +1,32 @@
 from tkinter import *
+from tkinter import ttk
 from tkinter import font
 import urllib
 import urllib.request
 
 g_Tk = Tk()
 g_Tk.title("숙박 업소 찾기")
+g_Tk.resizable(0,0)
 g_Tk.geometry("970x800+100+100")
 DataList = []
 url = str("")
+
 
 def InitTopText():
     TempFont = font.Font(g_Tk, size=30, weight='bold', family = 'Consolas')
     MainText = Label(g_Tk, font = TempFont, text="오늘은 늦었다[숙박 검색]")
     MainText.pack()
     MainText.place(x=270)
-    SearchFont = font.Font(g_Tk, size=20, weight='bold', family = 'Consolas')
 
-    global SearchListBox
-    ListBoxScrollbar = Scrollbar(g_Tk)
-    ListBoxScrollbar.pack()
-    ListBoxScrollbar.place(x=190, y=70)
+    global combo
 
+    SearchFont = font.Font(g_Tk, size=20, weight='bold', family='Consolas')
     TempFont = font.Font(g_Tk, size=15, weight='bold', family='Consolas')
-    SearchListBox = Listbox(g_Tk, font=SearchFont, activestyle='none',
-                            width=10, height=1, borderwidth=12, relief='ridge',
-                            yscrollcommand=ListBoxScrollbar.set)
 
-    SearchListBox.insert(1, "이름 검색")
-    SearchListBox.insert(2, "지역 검색")
-    SearchListBox.pack()
-    SearchListBox.place(x=10, y=70)
+    combo = ttk.Combobox(g_Tk, font=SearchFont, width=10, height=1)
+    combo['values'] = ('이름 검색', '지역 검색')
+    combo.place(x=10, y=70)
 
-    ListBoxScrollbar.config(command=SearchListBox.yview)
 
 def InitInputLabel():
     global InputLabel
@@ -61,7 +56,12 @@ def SearchButtonAction():
     RenderText.configure(state='normal')
     RenderText.delete(0, END)
 
-    GetInfo()
+    c = combo.current()
+
+    if  c == 0:
+        GetInfo()
+    elif c == 1:
+        GetArea()
 
     RenderText.bind('<<ListboxSelect>>', onselect)
 
@@ -121,8 +121,6 @@ def GetInfo():
         "&numOfRows=5000&pageSize=10&pageNo=1&startPage=1&MobileOS=ETC&MobileApp=AppTest&arrange=A&listYN=Y")
     req = conn.getresponse()
 
-    print(req)
-
     if int(req.status) == 200:
         response_body = req.read().decode('utf-8')
         parseData = parseString(response_body)
@@ -161,34 +159,34 @@ def GetArea():
     server = "api.visitkorea.or.kr"
     servicekey = "QZ8JKaSvORPU%2F0gzUXOjsmxrgd5D59mpLe2WJTl1Ttr7f746Meax%2Fj0wGnyJN4qFLQ%2FJIEz5rxAq3SDI59yLTw%3D%3D"
     conn = http.client.HTTPConnection(server)
-    conn.request("GET", "http://api.visitkorea.or.kr/openapi/service/rest/KorService/areaCode?serviceKey=" + servicekey +
-                 "&numOfRows=1000&pageSize=10&pageNo=1&startPage=1&MobileOS=ETC&MobileApp=AppTest&areaCode=1")
+    conn.request("GET", "/openapi/service/rest/KorService/searchStay?serviceKey=" + servicekey +
+                 "&numOfRows=5000&pageSize=10&pageNo=1&startPage=1&MobileOS=ETC&MobileApp=AppTest&arrange=A&listYN=Y")
     req = conn.getresponse()
 
     print(req)
 
     if int(req.status) == 200:
         response_body = req.read().decode('utf-8')
-        print(response_body)
-
         parseData = parseString(response_body)
-
-        print(parseData)
-
         GeoInfoWhere = parseData.childNodes
         row = GeoInfoWhere[0].childNodes[1].childNodes[0].childNodes
-
-        print(row)
 
         global DataList
         DataList.clear()
         for item in row:
             list = item.childNodes
-            print(list)
             for l in list:
-                if l.nodeName == 'code':
+                if l.nodeName == 'addr1':
                     DataList.append(l.firstChild.nodeValue)
-                if l.nodeName == 'name':
+                    if (l.firstChild.nodeValue.find(path)):
+                        pass
+                    else:
+                        RenderText.insert(END, l.firstChild.nodeValue)
+                if l.nodeName == 'firstimage':
+                    DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'tel':
+                    DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'title':
                     DataList.append(l.firstChild.nodeValue)
     else:
         print("Error")
