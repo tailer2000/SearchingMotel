@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import font
 import urllib
 import urllib.request
+import folium
 
 g_Tk = Tk()
 g_Tk.title("숙박 업소 찾기")
@@ -11,7 +12,7 @@ g_Tk.geometry("970x800+100+100")
 DataList = []
 url = str("")
 
-
+# Tkinter 메인 틀과 combo box
 def InitTopText():
     TempFont = font.Font(g_Tk, size=30, weight='bold', family = 'Consolas')
     MainText = Label(g_Tk, font = TempFont, text="오늘은 늦었다[숙박 검색]")
@@ -26,20 +27,26 @@ def InitTopText():
     combo = ttk.Combobox(g_Tk, font=SearchFont, width=10, height=1)
     combo['values'] = ('이름 검색', '지역 검색')
     combo.place(x=10, y=70)
-
+# 검색창
 def InitInputLabel():
     global InputLabel
     TempFont = font.Font(g_Tk, size=15, weight='bold', family = 'Consolas')
     InputLabel = Entry(g_Tk, font = TempFont, width = 73, borderwidth = 12, relief = 'ridge')
     InputLabel.pack()
     InputLabel.place(x=10, y=127)
-
+# 검색 버튼
 def InitSearchButton():
     TempFont = font.Font(g_Tk, size=18, weight='bold', family = 'Consolas')
     SearchButton = Button(g_Tk, font = TempFont, text="검색", command=SearchButtonAction)
     SearchButton.pack()
     SearchButton.place(x=870, y=127)
-
+# 지도 저장버튼
+def InitMapButton():
+    TempFont = font.Font(g_Tk, size=18, weight='bold', family='Consolas')
+    MapButton = Button(g_Tk, font=TempFont, text="지도저장", command=MapSave)
+    MapButton.pack()
+    MapButton.place(x=820, y= 10)
+# 사진틀과 세부정보 틀
 def InitSelectLabel():
     TempFont = font.Font(g_Tk, size=12, weight='bold', family='Consolas')
 
@@ -50,7 +57,7 @@ def InitSelectLabel():
     selectText = Text(g_Tk, width=64, height=7, borderwidth=12, relief='ridge')
     selectText.pack()
     selectText.place(x=470, y=635)
-
+# 검색 동작
 def SearchButtonAction():
     RenderText.configure(state='normal')
     RenderText.delete(0, END)
@@ -63,7 +70,7 @@ def SearchButtonAction():
 
     RenderText.bind('<<ListboxSelect>>', onselect)
 
-
+# 데이터 선택&띄우기
 def onselect(evt):
     w = evt.widget
     index = int(w.curselection()[0])
@@ -72,7 +79,7 @@ def onselect(evt):
     print('You selected item %d: "%s"' % (index, value))
 
     if c == 0:
-        url = DataList.index(value) - 2
+        url = DataList.index(value) - 4
         url = DataList[url]
         print(url)
 
@@ -100,11 +107,20 @@ def onselect(evt):
         selectText.insert(INSERT, DataList[DataList.index(value) - 1])
         selectText.insert(INSERT, "\n")
         selectText.insert(INSERT, '주소 : ')
-        selectText.insert(INSERT, DataList[DataList.index(value) - 3])
+        selectText.insert(INSERT, DataList[DataList.index(value) - 5])
         selectText.insert(INSERT, "\n")
+
+        global savex, savey, markname
+
+        savex = DataList[DataList.index(value) - 3]
+        savey = DataList[DataList.index(value) - 2]
+        markname = value
 
         selectText.pack()
         selectText.place(x=470, y=635)
+        print(savex)
+        print(savey)
+
 
     elif c == 1:
         url = DataList.index(value) + 1
@@ -129,10 +145,10 @@ def onselect(evt):
         selectText = Text(g_Tk, width=50, height=5, borderwidth=12, relief='ridge', font=TempFont)
 
         selectText.insert(INSERT, '숙박지명 : ')
-        selectText.insert(INSERT, DataList[DataList.index(value) + 3])
+        selectText.insert(INSERT, DataList[DataList.index(value) + 5])
         selectText.insert(INSERT, "\n")
         selectText.insert(INSERT, '전화 : ')
-        selectText.insert(INSERT, DataList[DataList.index(value) + 2])
+        selectText.insert(INSERT, DataList[DataList.index(value) + 4])
         selectText.insert(INSERT, "\n")
         selectText.insert(INSERT, '주소 : ')
         selectText.insert(INSERT, value)
@@ -141,13 +157,13 @@ def onselect(evt):
         selectText.pack()
         selectText.place(x=470, y=635)
 
-
+# xml에서 데이터 가져오기(건물명)
 def GetInfo():
     import http.client
     from xml.dom.minidom import parse, parseString
 
     conn = None
-    path = InputLabel.get()
+    path = InputLabel.get()         # 검색으로 입력받은 값갖기
     encText = urllib.parse.quote(path)
 
     server = "api.visitkorea.or.kr"
@@ -172,6 +188,10 @@ def GetInfo():
                     DataList.append(l.firstChild.nodeValue)
                 if l.nodeName == 'firstimage':
                     DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'mapx':
+                    DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'mapy':
+                    DataList.append(l.firstChild.nodeValue)
                 if l.nodeName == 'tel':
                     DataList.append(l.firstChild.nodeValue)
                 if l.nodeName == 'title':
@@ -183,7 +203,7 @@ def GetInfo():
     else:
         print("Error")
 
-
+# xml에서 데이터 가져오기(주소)
 def GetArea():
     import http.client
     from xml.dom.minidom import parse, parseString
@@ -218,6 +238,10 @@ def GetArea():
                         RenderText.insert(END, l.firstChild.nodeValue)
                 if l.nodeName == 'firstimage':
                     DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'mapx':
+                    DataList.append(l.firstChild.nodeValue)
+                if l.nodeName == 'mapy':
+                    DataList.append(l.firstChild.nodeValue)
                 if l.nodeName == 'tel':
                     DataList.append(l.firstChild.nodeValue)
                 if l.nodeName == 'title':
@@ -225,10 +249,17 @@ def GetArea():
     else:
         print("Error")
 
+# 지도 저장
+def MapSave():
+    print(float(savex))
+    print(markname)
+    map_osm = folium.Map(location=[37.568477, 126.981611], zoom_start=17)
+    folium.CircleMarker([float(savex), float(savey)], radius=100, color='#3186cc', fill_color='#3186cc', popup=markname).add_to(map_osm)
+    map_osm.save('D:/temp/map1.html')       # 맵데이터를 저장할 위치
 
+# 데이터 표시 틀
 def InitRenderText():
     global RenderText
-
     TempFont = font.Font(g_Tk, size=12, weight='bold', family='Consolas')
     RenderText = Listbox(g_Tk, width=45, height=26, borderwidth=12, relief='ridge', font = TempFont)
     RenderText.pack()
@@ -238,6 +269,7 @@ def InitRenderText():
 InitTopText()
 InitInputLabel()
 InitSearchButton()
+InitMapButton()
 InitRenderText()
 InitSelectLabel()
 g_Tk.mainloop()
