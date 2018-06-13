@@ -27,7 +27,6 @@ def InitTopText():
     combo['values'] = ('이름 검색', '지역 검색')
     combo.place(x=10, y=70)
 
-
 def InitInputLabel():
     global InputLabel
     TempFont = font.Font(g_Tk, size=15, weight='bold', family = 'Consolas')
@@ -133,7 +132,7 @@ def onselect(evt):
         selectText.insert(INSERT, DataList[DataList.index(value) + 3])
         selectText.insert(INSERT, "\n")
         selectText.insert(INSERT, '전화 : ')
-        selectText.insert(INSERT, DataList[DataList.index(value) + 1])
+        selectText.insert(INSERT, DataList[DataList.index(value) + 2])
         selectText.insert(INSERT, "\n")
         selectText.insert(INSERT, '주소 : ')
         selectText.insert(INSERT, value)
@@ -199,8 +198,6 @@ def GetArea():
     conn.request("GET", "/openapi/service/rest/KorService/searchStay?serviceKey=" + servicekey +
                  "&numOfRows=5000&pageSize=10&pageNo=1&startPage=1&MobileOS=ETC&MobileApp=AppTest&arrange=A&listYN=Y")
     req = conn.getresponse()
-
-    print(req)
 
     if int(req.status) == 200:
         response_body = req.read().decode('utf-8')
