@@ -55,7 +55,6 @@ def InitSelectLabel():
 def SearchButtonAction():
     RenderText.configure(state='normal')
     RenderText.delete(0, END)
-
     c = combo.current()
 
     if  c == 0:
@@ -70,40 +69,78 @@ def onselect(evt):
     w = evt.widget
     index = int(w.curselection()[0])
     value = w.get(index)
+    c = combo.current()
     print('You selected item %d: "%s"' % (index, value))
-    url = DataList.index(value) - 2
-    url = DataList[url]
-    print(url)
 
-    from io import BytesIO
-    from PIL import Image, ImageTk
+    if c == 0:
+        url = DataList.index(value) - 2
+        url = DataList[url]
+        print(url)
 
-    with urllib.request.urlopen(url) as u:
-        raw_data = u.read()
+        from io import BytesIO
+        from PIL import Image, ImageTk
 
-    im = Image.open(BytesIO(raw_data))
-    ph = ImageTk.PhotoImage(im)
+        with urllib.request.urlopen(url) as u:
+            raw_data = u.read()
 
-    selectLabel = Label(g_Tk, image=ph, height=375, width=450)
-    selectLabel.image = ph
-    selectLabel.pack()
-    selectLabel.place(x=480, y=225)
+        im = Image.open(BytesIO(raw_data))
+        ph = ImageTk.PhotoImage(im)
 
-    TempFont = font.Font(g_Tk, size=12, weight='bold', family='Consolas')
-    selectText = Text(g_Tk, width=50, height=5, borderwidth=12, relief='ridge', font = TempFont)
+        selectLabel = Label(g_Tk, image=ph, height=375, width=450)
+        selectLabel.image = ph
+        selectLabel.pack()
+        selectLabel.place(x=480, y=225)
 
-    selectText.insert(INSERT, '숙박지명 : ')
-    selectText.insert(INSERT, value)
-    selectText.insert(INSERT, "\n")
-    selectText.insert(INSERT, '전화 : ')
-    selectText.insert(INSERT, DataList[DataList.index(value) - 1])
-    selectText.insert(INSERT, "\n")
-    selectText.insert(INSERT, '주소 : ')
-    selectText.insert(INSERT, DataList[DataList.index(value) - 3])
-    selectText.insert(INSERT, "\n")
+        TempFont = font.Font(g_Tk, size=12, weight='bold', family='Consolas')
+        selectText = Text(g_Tk, width=50, height=5, borderwidth=12, relief='ridge', font = TempFont)
 
-    selectText.pack()
-    selectText.place(x=470, y=635)
+        selectText.insert(INSERT, '숙박지명 : ')
+        selectText.insert(INSERT, value)
+        selectText.insert(INSERT, "\n")
+        selectText.insert(INSERT, '전화 : ')
+        selectText.insert(INSERT, DataList[DataList.index(value) - 1])
+        selectText.insert(INSERT, "\n")
+        selectText.insert(INSERT, '주소 : ')
+        selectText.insert(INSERT, DataList[DataList.index(value) - 3])
+        selectText.insert(INSERT, "\n")
+
+        selectText.pack()
+        selectText.place(x=470, y=635)
+
+    elif c == 1:
+        url = DataList.index(value) + 1
+        url = DataList[url]
+        print(url)
+
+        from io import BytesIO
+        from PIL import Image, ImageTk
+
+        with urllib.request.urlopen(url) as u:
+            raw_data = u.read()
+
+        im = Image.open(BytesIO(raw_data))
+        ph = ImageTk.PhotoImage(im)
+
+        selectLabel = Label(g_Tk, image=ph, height=375, width=450)
+        selectLabel.image = ph
+        selectLabel.pack()
+        selectLabel.place(x=480, y=225)
+
+        TempFont = font.Font(g_Tk, size=12, weight='bold', family='Consolas')
+        selectText = Text(g_Tk, width=50, height=5, borderwidth=12, relief='ridge', font=TempFont)
+
+        selectText.insert(INSERT, '숙박지명 : ')
+        selectText.insert(INSERT, DataList[DataList.index(value) + 3])
+        selectText.insert(INSERT, "\n")
+        selectText.insert(INSERT, '전화 : ')
+        selectText.insert(INSERT, DataList[DataList.index(value) + 1])
+        selectText.insert(INSERT, "\n")
+        selectText.insert(INSERT, '주소 : ')
+        selectText.insert(INSERT, value)
+        selectText.insert(INSERT, "\n")
+
+        selectText.pack()
+        selectText.place(x=470, y=635)
 
 
 def GetInfo():
