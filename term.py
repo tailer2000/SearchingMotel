@@ -3,7 +3,6 @@ from tkinter import ttk
 from tkinter import font
 import urllib
 import urllib.request
-import folium
 
 g_Tk = Tk()
 g_Tk.title("숙박 업소 찾기")
@@ -43,7 +42,7 @@ def InitSearchButton():
 # 지도 저장버튼
 def InitMapButton():
     TempFont = font.Font(g_Tk, size=18, weight='bold', family='Consolas')
-    MapButton = Button(g_Tk, font=TempFont, text="지도저장", command=MapSave)
+    MapButton = Button(g_Tk, font=TempFont, text="지도보기", command=MapData)
     MapButton.pack()
     MapButton.place(x=820, y= 10)
 # 사진틀과 세부정보 틀
@@ -76,6 +75,7 @@ def onselect(evt):
     index = int(w.curselection()[0])
     value = w.get(index)
     c = combo.current()
+    global savex, savey, markname
     print('You selected item %d: "%s"' % (index, value))
 
     if c == 0:
@@ -109,19 +109,12 @@ def onselect(evt):
         selectText.insert(INSERT, '주소 : ')
         selectText.insert(INSERT, DataList[DataList.index(value) - 5])
         selectText.insert(INSERT, "\n")
-
-        global savex, savey, markname
-
         savex = DataList[DataList.index(value) - 3]
         savey = DataList[DataList.index(value) - 2]
         markname = value
 
         selectText.pack()
         selectText.place(x=470, y=635)
-        print(savex)
-        print(savey)
-
-
     elif c == 1:
         url = DataList.index(value) + 1
         url = DataList[url]
@@ -153,6 +146,9 @@ def onselect(evt):
         selectText.insert(INSERT, '주소 : ')
         selectText.insert(INSERT, value)
         selectText.insert(INSERT, "\n")
+        savex = DataList[DataList.index(value) + 2]
+        savey = DataList[DataList.index(value) + 3]
+        markname = DataList[DataList.index(value) + 5]
 
         selectText.pack()
         selectText.place(x=470, y=635)
@@ -249,13 +245,39 @@ def GetArea():
     else:
         print("Error")
 
-# 지도 저장
-def MapSave():
-    print(float(savex))
-    print(markname)
-    map_osm = folium.Map(location=[37.568477, 126.981611], zoom_start=17)
-    folium.CircleMarker([float(savex), float(savey)], radius=100, color='#3186cc', fill_color='#3186cc', popup=markname).add_to(map_osm)
-    map_osm.save('D:/temp/map1.html')       # 맵데이터를 저장할 위치
+# 네이버 지도 api 연동 및 지도 가져오기
+def MapData():
+    import  http.client
+    import os
+    import sys
+
+    client_id = "_TpQmXn1JarwHQS1nod7"
+    client_secret = "7XG5Jjcqao"
+    map_server = "https://openapi.naver.com/v1/map/staticmap.bin?clientId="+client_id +"&url=" + "https://naver.com"+"&crs=EPSG:4326&center=" \
+                 + savex +"," + savey +"&level=10&w=450&h=375&baselayer=default&markers=" + savex + "," + savey
+    request = urllib.request.Request(map_server)
+    request.add_header("X-Naver-Client-Id", client_id)
+    request.add_header("X-Naver-Client-Secret", client_secret)
+    response = urllib.request.urlopen(request)
+    rescode = response.getcode()
+
+    from io import BytesIO
+    from PIL import Image, ImageTk
+
+    if(rescode == 200):
+        response_body = response.read()
+        with urllib.request.urlopen(request) as a:
+            raw_data = a.read()
+
+        imm = Image.open(BytesIO(response_body))
+        ph = ImageTk.PhotoImage(imm)
+
+        selectLabel = Label(g_Tk, image=ph, height=375, width=450)
+        selectLabel.image = ph
+        selectLabel.pack()
+        selectLabel.place(x=480, y=225)
+    else:
+        print("Error : " + rescode)
 
 # 데이터 표시 틀
 def InitRenderText():
